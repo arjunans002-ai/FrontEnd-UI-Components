@@ -1,0 +1,2118 @@
+/* =============================================================================
+   CHIP-QUEST '84 // RETRO 8-BIT ARCADE STYLESHEET
+   =============================================================================
+   Designed with genuine 8-bit arcade aesthetics, high-contrast palette,
+   scanline phosphor simulation, pixel stepped borders, and complete WCAG 2.1 AA
+   accessibility compliance.
+   ============================================================================= */
+
+/* -----------------------------------------------------------------------------
+   1. CSS VARIABLES & SYSTEM CONSTANTS
+   ----------------------------------------------------------------------------- */
+:root {
+  /* Exact Specified Palette */
+  --bg: #1B0B3A;        /* Deep arcade cosmic purple */
+  --outline: #0D0221;   /* Heavy 8-bit border outline black-violet */
+  --panel: #6C2BD9;     /* Cartridge housing violet */
+  --teal: #00E5C7;      /* Neon 80s arcade cyan/teal */
+  --pink: #FF2E93;      /* Hot CRT magenta/pink */
+  --yellow: #FFD93D;    /* Pac-man yellow token highlight */
+  --text: #FFF8E7;      /* Crisp phosphor creamy white */
+
+  /* Supporting Arcade Accents */
+  --panel-dark: #3F138A;
+  --panel-light: #8540E8;
+  --card-bg: #271052;
+  --card-border: #4D1B99;
+  --accent-green: #39FF14;
+  --shadow-color: #0D0221;
+  --danger: #FF3344;
+
+  /* Typography Stack */
+  --font-arcade: "Courier New", "Lucida Console", "Consolas", monospace;
+
+  /* Sizing & Offsets */
+  --border-pixel: 4px;
+  --touch-target: 44px;
+  --hud-height: 58px;
+}
+
+/* -----------------------------------------------------------------------------
+   2. GLOBAL RESET & BASE STYLES
+   ----------------------------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  border-radius: 0 !important; /* Strict 8-bit rule: NO CURVED CORNERS! */
+  -webkit-font-smoothing: none;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: geometricPrecision;
+  image-rendering: pixelated;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-arcade);
+}
+
+body.arcade-body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-arcade);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  line-height: 1.5;
+  padding-top: var(--hud-height); /* Space for fixed HUD */
+}
+
+/* Global Container */
+.arcade-container {
+  width: 100%;
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+/* Headings Base */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-arcade);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text);
+}
+
+/* Links */
+a {
+  color: var(--teal);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--yellow);
+  text-decoration: underline;
+}
+
+/* Buttons Reset */
+button {
+  font-family: var(--font-arcade);
+  font-weight: 700;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+/* -----------------------------------------------------------------------------
+   3. ACCESSIBILITY & @SUPPORTS FALLBACKS
+   ----------------------------------------------------------------------------- */
+/* Fallback: Plain outline if :focus-visible is NOT supported */
+:focus {
+  outline: 3px solid var(--yellow);
+  outline-offset: 2px;
+}
+
+/* Progressive enhancement: Use dashed outline only on keyboard focus if supported */
+@supports selector(:focus-visible) {
+  :focus {
+    outline: none;
+  }
+  :focus-visible {
+    outline: 3px dashed var(--yellow) !important;
+    outline-offset: 3px !important;
+  }
+}
+
+/* Fallback: Flexbox if Grid is NOT supported */
+.quest-grid,
+.item-grid,
+.skills-grid,
+.bestiary-grid,
+.high-score-board {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.quest-card,
+.item-card,
+.skill-card,
+.monster-card,
+.score-card {
+  flex: 1 1 260px;
+}
+
+/* Grid Layout when @supports (display: grid) is true */
+@supports (display: grid) {
+  .quest-grid,
+  .skills-grid,
+  .bestiary-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .item-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .high-score-board {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   4. CRT SCREEN OVERLAY (Scanlines, Vignette, Phosphor Flicker)
+   ----------------------------------------------------------------------------- */
+.crt-overlay {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 99999;
+  background:
+    /* CRT Scanline horizontal raster lines */
+    repeating-linear-gradient(
+      to bottom,
+      rgba(13, 2, 33, 0) 0px,
+      rgba(0, 0, 0, 0) 2px,
+      rgba(0, 0, 0, 0.18) 3px,
+      rgba(0, 0, 0, 0.18) 4px
+    ),
+    /* CRT Screen Vignette (darkened curved edges) */
+    radial-gradient(
+      ellipse at center,
+      rgba(0, 0, 0, 0) 65%,
+      rgba(0, 0, 0, 0.25) 90%,
+      rgba(0, 0, 0, 0.45) 100%
+    );
+  animation: crt-flicker 0.15s infinite;
+}
+
+@keyframes crt-flicker {
+  0% { opacity: 0.96; }
+  50% { opacity: 1; }
+  100% { opacity: 0.97; }
+}
+
+/* -----------------------------------------------------------------------------
+   5. FIXED TOP: 8-BIT XP PROGRESS BAR & HUD
+   ----------------------------------------------------------------------------- */
+.hud-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--hud-height);
+  background-color: var(--outline);
+  border-bottom: 4px solid var(--panel);
+  box-shadow: 0 4px 0 0 rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.hud-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  gap: 12px;
+}
+
+/* Player Level Badge */
+.hud-badge {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--pink);
+  color: var(--outline);
+  padding: 4px 10px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+  box-shadow: 3px 3px 0 0 var(--shadow-color);
+  border: 2px solid var(--text);
+  min-height: var(--touch-target);
+}
+
+.hud-badge-title {
+  margin-right: 6px;
+  color: var(--yellow);
+}
+
+.hud-badge-value {
+  font-size: 1.1rem;
+  color: var(--text);
+}
+
+/* XP Bar Wrapper */
+.xp-bar-wrapper {
+  flex: 1;
+  max-width: 580px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.xp-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.xp-title {
+  color: var(--teal);
+}
+
+.xp-counter {
+  color: var(--yellow);
+}
+
+/* Pixel Segmented XP Track */
+.xp-bar-track {
+  position: relative;
+  height: 16px;
+  background-color: #12042B;
+  border: 2px solid var(--text);
+  box-shadow: inset 2px 2px 0 0 #000000;
+  overflow: hidden;
+}
+
+.xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, var(--pink), var(--yellow), var(--teal));
+  width: 0%;
+  transition: width 0.2s steps(10);
+}
+
+.xp-bar-segments {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  pointer-events: none;
+}
+
+.xp-seg {
+  flex: 1;
+  border-right: 2px solid rgba(13, 2, 33, 0.7);
+}
+
+/* Audio Control Button */
+.hud-audio-control {
+  display: flex;
+  align-items: center;
+}
+
+.sound-toggle-btn {
+  background-color: var(--panel);
+  color: var(--text);
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  border: 2px solid var(--text);
+  box-shadow: 3px 3px 0 0 var(--shadow-color);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--touch-target);
+  transition: transform 0.1s steps(2);
+}
+
+.sound-toggle-btn.is-active {
+  background-color: var(--teal);
+  color: var(--outline);
+}
+
+/* -----------------------------------------------------------------------------
+   6. 8-BIT BUTTON SYSTEM & PIXEL STEPPED STYLING
+   ----------------------------------------------------------------------------- */
+.arcade-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 18px;
+  background-color: var(--panel);
+  color: var(--text);
+  font-family: var(--font-arcade);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: 3px solid var(--outline);
+  box-shadow: 6px 6px 0 0 var(--shadow-color);
+  min-height: var(--touch-target);
+  min-width: var(--touch-target);
+  transition: transform 0.05s steps(2), box-shadow 0.05s steps(2);
+  user-select: none;
+}
+
+/* Button Press Effect */
+.arcade-btn:hover {
+  background-color: var(--panel-light);
+  color: var(--text);
+}
+
+.arcade-btn:active,
+.arcade-btn:focus:active {
+  transform: translateY(3px);
+  box-shadow: 3px 3px 0 0 var(--shadow-color);
+}
+
+/* Button Variants */
+.btn-teal {
+  background-color: var(--teal);
+  color: var(--outline);
+}
+.btn-teal:hover {
+  background-color: #55FFDE;
+  color: var(--outline);
+}
+
+.btn-yellow {
+  background-color: var(--yellow);
+  color: var(--outline);
+}
+.btn-yellow:hover {
+  background-color: #FFE566;
+  color: var(--outline);
+}
+
+.btn-pink {
+  background-color: var(--pink);
+  color: var(--text);
+}
+.btn-pink:hover {
+  background-color: #FF59A8;
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--text);
+  border: 3px solid var(--text);
+}
+.btn-outline:hover {
+  background-color: var(--text);
+  color: var(--outline);
+}
+
+/* Button Sizes */
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  box-shadow: 4px 4px 0 0 var(--shadow-color);
+}
+.btn-sm:active {
+  transform: translateY(2px);
+  box-shadow: 2px 2px 0 0 var(--shadow-color);
+}
+
+.btn-xs {
+  padding: 4px 8px;
+  font-size: 0.7rem;
+  box-shadow: 3px 3px 0 0 var(--shadow-color);
+}
+.btn-xs:active {
+  transform: translateY(2px);
+  box-shadow: 1px 1px 0 0 var(--shadow-color);
+}
+
+.arcade-btn:disabled,
+.arcade-btn[disabled] {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: 2px 2px 0 0 var(--shadow-color);
+}
+
+/* -----------------------------------------------------------------------------
+   7. HERO TITLE SCREEN SECTION
+   ----------------------------------------------------------------------------- */
+.hero-title-screen {
+  padding: 48px 0 32px 0;
+  text-align: center;
+  position: relative;
+}
+
+.hero-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+/* Arcade Marquee Outer Box */
+.arcade-marquee-box {
+  position: relative;
+  background-color: var(--card-bg);
+  border: 4px solid var(--pink);
+  padding: 24px 20px;
+  box-shadow: 8px 8px 0 0 var(--outline);
+  width: 100%;
+  max-width: 780px;
+}
+
+.marquee-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.arcade-edition-tag {
+  color: var(--yellow);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.arcade-title-glitch {
+  font-size: clamp(1.8rem, 5vw, 3.2rem);
+  color: var(--teal);
+  text-shadow: 4px 4px 0 var(--pink), 8px 8px 0 var(--outline);
+  letter-spacing: 3px;
+  line-height: 1.1;
+}
+
+.arcade-subtitle {
+  color: var(--text);
+  font-size: clamp(0.75rem, 2vw, 0.95rem);
+  letter-spacing: 1.5px;
+}
+
+/* Sprites Display Row */
+.hero-sprites-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  margin: 8px 0;
+}
+
+/* Walking Character Animation with steps() timing */
+.hero-sprite-anim {
+  animation: walk-bob 0.6s steps(2) infinite;
+}
+
+@keyframes walk-bob {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+}
+
+/* Spinning Coin Animation with steps() timing */
+.coin-sprite-anim {
+  animation: coin-spin 1s steps(4) infinite;
+}
+
+@keyframes coin-spin {
+  0% { transform: scaleX(1); }
+  25% { transform: scaleX(0.5); }
+  50% { transform: scaleX(0.05); }
+  75% { transform: scaleX(0.5); }
+  100% { transform: scaleX(1); }
+}
+
+/* Hero Press Start Button with steps(2) blink */
+.hero-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.hero-start-btn {
+  background-color: var(--pink);
+  color: var(--text);
+  font-size: clamp(1rem, 3vw, 1.3rem);
+  padding: 16px 36px;
+  border: 4px solid var(--outline);
+  box-shadow: 8px 8px 0 0 var(--outline);
+}
+
+.blink-text {
+  animation: press-start-blink 1s steps(2) infinite;
+}
+
+@keyframes press-start-blink {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.hero-start-btn:hover {
+  background-color: var(--teal);
+  color: var(--outline);
+  border-color: var(--yellow);
+}
+
+.hero-start-btn:hover .blink-text {
+  animation: none;
+  opacity: 1;
+}
+
+.hero-insert-coin {
+  font-size: 0.8rem;
+  color: var(--yellow);
+  letter-spacing: 2px;
+}
+
+/* -----------------------------------------------------------------------------
+   8. TAB SYSTEM SECTION & CARTRIDGE DESIGN
+   ----------------------------------------------------------------------------- */
+.arcade-tabs-section {
+  padding: 32px 0 64px 0;
+}
+
+.section-title-wrap {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.pixel-section-title {
+  color: var(--yellow);
+  font-size: clamp(1.2rem, 3vw, 1.8rem);
+  margin-bottom: 12px;
+}
+
+.pixel-divider {
+  width: 120px;
+  height: 6px;
+  background: repeating-linear-gradient(
+    to right,
+    var(--pink) 0px,
+    var(--pink) 12px,
+    var(--teal) 12px,
+    var(--teal) 24px,
+    var(--yellow) 24px,
+    var(--yellow) 36px
+  );
+  margin: 0 auto;
+}
+
+/* Tab Component Outer Wrap */
+.arcade-tabs {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* TAB NAVIGATION LIST (role="tablist") */
+.arcade-tablist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  position: relative;
+  z-index: 2;
+  margin-bottom: -4px; /* Seamless join with cartridge panel border */
+}
+
+/* Individual Arcade Tab (role="tab") */
+.arcade-tab {
+  flex: 1 1 auto;
+  min-height: var(--touch-target);
+  padding: 12px 16px;
+  background-color: var(--panel);
+  color: var(--text);
+  font-family: var(--font-arcade);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: 4px solid var(--outline);
+  border-bottom: 4px solid var(--outline);
+  box-shadow: 4px -4px 0 0 var(--shadow-color);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.05s steps(2), background-color 0.1s steps(2);
+}
+
+.tab-active-indicator {
+  display: none;
+  font-size: 0.75rem;
+  color: var(--pink);
+}
+
+/* Tab State: HOVER */
+.arcade-tab:hover {
+  background-color: var(--panel-light);
+  color: #FFFFFF;
+  transform: translateY(-2px);
+  box-shadow: 4px -6px 0 0 var(--shadow-color);
+}
+
+/* Tab State: FOCUS */
+.arcade-tab:focus {
+  outline: 3px solid var(--yellow);
+  z-index: 3;
+}
+@supports selector(:focus-visible) {
+  .arcade-tab:focus {
+    outline: none;
+  }
+  .arcade-tab:focus-visible {
+    outline: 3px dashed var(--yellow) !important;
+    outline-offset: 2px !important;
+    z-index: 3;
+  }
+}
+
+/* Tab State: ACTIVE / SELECTED (aria-selected="true") */
+.arcade-tab[aria-selected="true"] {
+  background-color: var(--teal);
+  color: var(--outline);
+  border-bottom: 4px solid var(--teal); /* Seamless join */
+  box-shadow: 6px -6px 0 0 var(--shadow-color);
+  transform: translateY(-4px);
+  z-index: 3;
+}
+
+.arcade-tab[aria-selected="true"] .tab-active-indicator {
+  display: inline-block;
+}
+
+.arcade-tab[aria-selected="true"]:hover {
+  background-color: #55FFDE;
+  color: var(--outline);
+}
+
+/* Tab State: DISABLED */
+.arcade-tab[aria-disabled="true"],
+.arcade-tab:disabled {
+  background-color: #2D1B4D;
+  color: #6E5E8A;
+  cursor: not-allowed;
+  opacity: 0.6;
+  box-shadow: 2px -2px 0 0 var(--shadow-color);
+  transform: none;
+}
+
+/* -----------------------------------------------------------------------------
+   9. CARTRIDGE TAB PANELS (Cartridge Content Card Styling)
+   ----------------------------------------------------------------------------- */
+.arcade-panels-stage {
+  position: relative;
+  z-index: 1;
+}
+
+/* Tabpanel Container */
+.arcade-tabpanel {
+  background-color: var(--card-bg);
+  border: 4px solid var(--outline);
+  box-shadow: 8px 8px 0 0 var(--outline);
+  padding: 0;
+  position: relative;
+}
+
+/* Cartridge Header Ribbon */
+.cartridge-header {
+  background-color: var(--outline);
+  border-bottom: 3px solid var(--panel);
+  padding: 8px 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+}
+
+.cartridge-rom-id {
+  color: var(--yellow);
+}
+
+.cartridge-status {
+  color: var(--accent-green);
+}
+
+.cartridge-body {
+  padding: 24px 20px;
+}
+
+/* Tabpanel Hidden State */
+.arcade-tabpanel[hidden] {
+  display: none !important;
+}
+
+/* Tabpanel Animated Transition Class */
+.arcade-tabpanel.is-animating {
+  animation: panel-swap 0.25s steps(4) forwards;
+}
+
+@keyframes panel-swap {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   10. MODULE CONTENT: QUEST LOG, INVENTORY, SKILLS, BESTIARY
+   ----------------------------------------------------------------------------- */
+/* Pills & Badges */
+.pixel-pill {
+  display: inline-block;
+  padding: 3px 8px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border: 2px solid var(--outline);
+  box-shadow: 2px 2px 0 0 var(--outline);
+}
+
+.pill-pink {
+  background-color: var(--pink);
+  color: var(--text);
+}
+.pill-yellow {
+  background-color: var(--yellow);
+  color: var(--outline);
+}
+.pill-teal {
+  background-color: var(--teal);
+  color: var(--outline);
+}
+.pill-green {
+  background-color: var(--accent-green);
+  color: var(--outline);
+}
+.pill-danger {
+  background-color: var(--danger);
+  color: var(--text);
+}
+
+/* --- Quest Log Styling --- */
+.quest-card {
+  background-color: #1E0A40;
+  border: 3px solid var(--panel);
+  padding: 18px;
+  box-shadow: 4px 4px 0 0 var(--outline);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.quest-featured {
+  border-color: var(--pink);
+  margin-bottom: 24px;
+  background-color: #23084C;
+}
+
+.quest-badge-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.quest-xp-reward {
+  color: var(--yellow);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.quest-title {
+  color: var(--teal);
+  font-size: clamp(1rem, 2.5vw, 1.3rem);
+}
+
+.quest-subhead {
+  color: var(--yellow);
+  font-size: 0.95rem;
+}
+
+.quest-description {
+  font-size: 0.82rem;
+  color: #D1C5E8;
+  line-height: 1.4;
+}
+
+.quest-progress-box {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.quest-progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text);
+}
+
+.quest-track {
+  height: 12px;
+  background-color: var(--outline);
+  border: 2px solid var(--text);
+}
+
+.quest-fill {
+  height: 100%;
+  background-color: var(--pink);
+}
+
+.quest-actions-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.quest-mini-stat {
+  font-size: 0.75rem;
+  color: var(--teal);
+  font-weight: 700;
+}
+
+/* --- Inventory Item Grid Styling --- */
+.item-card {
+  background-color: #1E0A40;
+  border: 3px solid var(--panel);
+  padding: 14px;
+  box-shadow: 4px 4px 0 0 var(--outline);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.item-card.rarity-legendary { border-color: var(--yellow); }
+.item-card.rarity-epic { border-color: var(--pink); }
+.item-card.rarity-rare { border-color: var(--teal); }
+.item-card.rarity-common { border-color: var(--panel-light); }
+.item-card.rarity-key { border-color: var(--accent-green); }
+
+.item-icon-box {
+  width: 52px;
+  height: 52px;
+  min-width: 52px;
+  background-color: var(--outline);
+  border: 2px solid var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  box-shadow: 2px 2px 0 0 var(--shadow-color);
+}
+
+.item-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.item-rarity {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+.rarity-legendary .item-rarity { color: var(--yellow); }
+.rarity-epic .item-rarity { color: var(--pink); }
+.rarity-rare .item-rarity { color: var(--teal); }
+.rarity-common .item-rarity { color: #A592C4; }
+.rarity-key .item-rarity { color: var(--accent-green); }
+
+.item-name {
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.item-stats {
+  font-size: 0.72rem;
+  color: var(--yellow);
+}
+
+/* --- Skills Grid Styling --- */
+.skill-card {
+  background-color: #1E0A40;
+  border: 3px solid var(--panel);
+  padding: 16px;
+  box-shadow: 4px 4px 0 0 var(--outline);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.skill-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.skill-icon {
+  font-size: 1.8rem;
+}
+
+.skill-name {
+  color: var(--teal);
+  font-size: 0.95rem;
+}
+
+.skill-meta {
+  font-size: 0.7rem;
+  color: var(--yellow);
+}
+
+.skill-description {
+  font-size: 0.8rem;
+  color: #D1C5E8;
+  line-height: 1.4;
+}
+
+.skill-level-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.72rem;
+}
+
+.skill-pips {
+  display: flex;
+  gap: 4px;
+}
+
+.skill-pips .pip {
+  width: 10px;
+  height: 10px;
+  background-color: var(--outline);
+  border: 2px solid var(--text);
+}
+
+.skill-pips .pip.active {
+  background-color: var(--teal);
+}
+
+/* --- Bestiary Grid Styling --- */
+.monster-card {
+  background-color: #1E0A40;
+  border: 3px solid var(--panel);
+  padding: 18px;
+  box-shadow: 4px 4px 0 0 var(--outline);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.monster-card.monster-boss {
+  border-color: var(--danger);
+  background-color: #2D0924;
+}
+
+.monster-badge-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.monster-id {
+  font-size: 0.75rem;
+  color: var(--yellow);
+}
+
+.monster-visual {
+  font-size: 2.2rem;
+  text-align: center;
+  margin: 6px 0;
+}
+
+.monster-name {
+  font-size: 1rem;
+  color: var(--teal);
+}
+.monster-boss .monster-name {
+  color: var(--pink);
+}
+
+.monster-stats {
+  list-style: none;
+  font-size: 0.72rem;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  background-color: var(--outline);
+  padding: 8px;
+  border: 2px solid var(--panel);
+}
+
+.monster-stats li strong {
+  color: var(--yellow);
+}
+
+.monster-lore {
+  font-size: 0.78rem;
+  color: #D1C5E8;
+  line-height: 1.4;
+}
+
+/* -----------------------------------------------------------------------------
+   11. ACHIEVEMENT TOAST NOTIFICATION
+   ----------------------------------------------------------------------------- */
+.achievement-toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 10000;
+  max-width: 380px;
+  transform: translateX(130%);
+  transition: transform 0.3s steps(6);
+  pointer-events: auto;
+}
+
+.achievement-toast.is-visible {
+  transform: translateX(0);
+}
+
+.achievement-card {
+  background-color: var(--outline);
+  border: 4px solid var(--yellow);
+  box-shadow: 6px 6px 0 0 var(--shadow-color);
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.achievement-pixel-icon {
+  flex-shrink: 0;
+}
+
+.achievement-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.achievement-badge {
+  font-size: 0.65rem;
+  color: var(--pink);
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.achievement-title {
+  font-size: 0.9rem;
+  color: var(--yellow);
+  line-height: 1.2;
+}
+
+.achievement-desc {
+  font-size: 0.72rem;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+/* -----------------------------------------------------------------------------
+   12. COIN SHOWER CONTAINER (KONAMI EASTER EGG)
+   ----------------------------------------------------------------------------- */
+.coin-shower-container {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 99998;
+  overflow: hidden;
+}
+
+.falling-coin {
+  position: absolute;
+  top: -60px;
+  font-size: 28px;
+  animation: fall-down 2.2s linear forwards;
+}
+
+@keyframes fall-down {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(110vh) rotate(720deg);
+    opacity: 0.2;
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   13. ARCADE FOOTER: GAME OVER & HIGH SCORE SCREEN
+   ----------------------------------------------------------------------------- */
+.arcade-footer {
+  background-color: var(--outline);
+  border-top: 6px solid var(--panel);
+  padding: 48px 0 36px 0;
+  box-shadow: 0 -8px 0 0 rgba(0, 0, 0, 0.4);
+}
+
+.footer-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  text-align: center;
+}
+
+.game-over-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.game-over-text {
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  color: var(--pink);
+  letter-spacing: 4px;
+  text-shadow: 4px 4px 0 var(--bg);
+}
+
+.continue-countdown {
+  font-size: 1.1rem;
+  color: var(--yellow);
+  letter-spacing: 2px;
+}
+
+.blink-fast {
+  animation: blink-1s 0.8s steps(2) infinite;
+}
+
+@keyframes blink-1s {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+/* High Score Board */
+.high-score-board {
+  width: 100%;
+  max-width: 680px;
+}
+
+.score-card {
+  background-color: var(--card-bg);
+  border: 3px solid var(--panel);
+  padding: 16px;
+  box-shadow: 6px 6px 0 0 var(--shadow-color);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.player-score-card {
+  border-color: var(--teal);
+}
+
+.score-label {
+  font-size: 0.72rem;
+  color: var(--yellow);
+  letter-spacing: 1px;
+}
+
+.score-value {
+  font-size: 1.6rem;
+  color: var(--text);
+  font-weight: 700;
+  letter-spacing: 2px;
+}
+
+.score-holder {
+  font-size: 0.75rem;
+  color: var(--teal);
+}
+
+/* Insert Coin Replay Button */
+.footer-bottom-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+}
+
+.btn-insert-coin {
+  background-color: var(--yellow);
+  color: var(--outline);
+  font-size: 1rem;
+  padding: 14px 28px;
+  border-color: var(--outline);
+  box-shadow: 6px 6px 0 0 var(--pink);
+  gap: 10px;
+}
+.btn-insert-coin:hover {
+  background-color: #FFFFFF;
+  color: var(--outline);
+}
+
+.footer-credits {
+  font-size: 0.72rem;
+  color: #8C7CA6;
+  max-width: 650px;
+  line-height: 1.6;
+}
+
+/* -----------------------------------------------------------------------------
+   14. PROGRESSIVE ENHANCEMENT: .NO-JS FALLBACK RULES
+   ----------------------------------------------------------------------------- */
+/* When JavaScript is disabled:
+   1. Display all cartridge panels simultaneously in a continuous document stream
+   2. Remove hidden attribute behavior
+   3. Hide interactive tab button bar
+   4. Show the noscript advisory banner */
+.no-js .noscript-banner {
+  display: block;
+  background-color: var(--pink);
+  color: var(--outline);
+  padding: 14px 0;
+  border-bottom: 4px solid var(--outline);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.no-js .arcade-tablist {
+  display: none !important;
+}
+
+.no-js .arcade-tabpanel {
+  display: block !important;
+  margin-bottom: 32px;
+}
+
+.no-js .no-js-title {
+  display: block;
+  color: var(--yellow);
+  font-size: 1.25rem;
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 2px dashed var(--yellow);
+}
+
+/* When JavaScript is ENABLED: hide no-js section headers */
+.js .no-js-title {
+  display: none;
+}
+
+.js .noscript-banner {
+  display: none;
+}
+
+/* =============================================================================
+   15. ANIMATED BACKGROUND GAMING CHARACTERS
+   =============================================================================
+   Multiple pixel-art gaming character sprites animate across the page
+   background using pure CSS @keyframes + steps() timing.
+   All characters are drawn as layered box-shadows on tiny <span> elements.
+   They are aria-hidden and pointer-events:none — purely decorative.
+   ============================================================================= */
+
+/* ── Background Scene Container ── */
+.bg-scene {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  pointer-events: none;
+  z-index: 0;           /* Behind all content */
+  overflow: hidden;
+}
+
+/* Ground line across the bottom */
+.bg-scene::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: repeating-linear-gradient(
+    to right,
+    var(--panel) 0px, var(--panel) 12px,
+    var(--outline) 12px, var(--outline) 24px
+  );
+}
+
+/* ── Shared Sprite Base ── */
+.bg-char {
+  position: absolute;
+  bottom: 12px;       /* Sit on the ground line */
+  display: block;
+  image-rendering: pixelated;
+}
+
+/* ── Floating Stars / Particles in background ── */
+.bg-stars {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(1px 1px at 8%  12%, var(--teal)   0%, transparent 100%),
+    radial-gradient(1px 1px at 22% 35%, var(--yellow)  0%, transparent 100%),
+    radial-gradient(1px 1px at 37%  8%, var(--pink)   0%, transparent 100%),
+    radial-gradient(1px 1px at 55% 20%, var(--teal)   0%, transparent 100%),
+    radial-gradient(1px 1px at 71% 45%, var(--yellow)  0%, transparent 100%),
+    radial-gradient(1px 1px at 85% 10%, var(--pink)   0%, transparent 100%),
+    radial-gradient(1px 1px at 93% 30%, var(--teal)   0%, transparent 100%),
+    radial-gradient(2px 2px at 15% 60%, var(--yellow)  0%, transparent 100%),
+    radial-gradient(2px 2px at 45% 75%, var(--teal)   0%, transparent 100%),
+    radial-gradient(2px 2px at 78% 65%, var(--pink)   0%, transparent 100%),
+    radial-gradient(1px 1px at 30% 85%, var(--yellow)  0%, transparent 100%),
+    radial-gradient(1px 1px at 60% 90%, var(--teal)   0%, transparent 100%),
+    radial-gradient(1px 1px at 90% 80%, var(--pink)   0%, transparent 100%);
+  animation: twinkle 3s steps(3) infinite alternate;
+  opacity: 0.6;
+}
+
+@keyframes twinkle {
+  0%   { opacity: 0.4; }
+  50%  { opacity: 0.7; }
+  100% { opacity: 0.5; }
+}
+
+/* ==========================================================================
+   CHARACTER 1: PAC-MAN GHOST  — drifts left-to-right across upper third
+   Drawn entirely with box-shadow pixel art on a 1px "pixel unit" element.
+   ========================================================================== */
+.bg-ghost {
+  /* A 16×16px pixel-unit ghost sprite using box-shadow pixel map.
+     Each box-shadow = one "pixel" at (X offset, Y offset) in var colours.
+     Body rows (top→bottom), colour: --panel (purple), accent rows in --teal */
+  width:  1px;
+  height: 1px;
+  top: 18%;
+  left: -80px;
+  background: transparent;
+  /* Ghost body — 8 cols × 10 rows of 8px pixels */
+  box-shadow:
+    /* Row 1 — top dome */
+    24px 0   0 8px var(--panel),
+    32px 0   0 8px var(--panel),
+    40px 0   0 8px var(--panel),
+    48px 0   0 8px var(--panel),
+    /* Row 2 */
+    16px 8px 0 8px var(--panel),
+    24px 8px 0 8px var(--panel),
+    32px 8px 0 8px var(--panel),
+    40px 8px 0 8px var(--panel),
+    48px 8px 0 8px var(--panel),
+    56px 8px 0 8px var(--panel),
+    /* Row 3 — eyes row */
+    8px  16px 0 8px var(--panel),
+    16px 16px 0 8px var(--panel),
+    24px 16px 0 8px #FFF8E7,   /* left eye white */
+    32px 16px 0 8px #FFF8E7,
+    40px 16px 0 8px #FFF8E7,   /* right eye white */
+    48px 16px 0 8px #FFF8E7,
+    56px 16px 0 8px var(--panel),
+    64px 16px 0 8px var(--panel),
+    /* Row 4 — pupils */
+    8px  24px 0 8px var(--panel),
+    16px 24px 0 8px var(--panel),
+    24px 24px 0 8px var(--teal),  /* left pupil */
+    32px 24px 0 8px var(--panel),
+    40px 24px 0 8px var(--teal),  /* right pupil */
+    48px 24px 0 8px var(--panel),
+    56px 24px 0 8px var(--panel),
+    64px 24px 0 8px var(--panel),
+    /* Row 5 – 8 (body) */
+    8px  32px 0 8px var(--panel),
+    16px 32px 0 8px var(--panel),
+    24px 32px 0 8px var(--panel),
+    32px 32px 0 8px var(--panel),
+    40px 32px 0 8px var(--panel),
+    48px 32px 0 8px var(--panel),
+    56px 32px 0 8px var(--panel),
+    64px 32px 0 8px var(--panel),
+    8px  40px 0 8px var(--panel),
+    16px 40px 0 8px var(--panel),
+    24px 40px 0 8px var(--panel),
+    32px 40px 0 8px var(--panel),
+    40px 40px 0 8px var(--panel),
+    48px 40px 0 8px var(--panel),
+    56px 40px 0 8px var(--panel),
+    64px 40px 0 8px var(--panel),
+    /* Row 9 — skirt with gaps */
+    8px  48px 0 8px var(--panel),
+    16px 48px 0 8px var(--panel),
+    24px 48px 0 8px var(--panel),
+    40px 48px 0 8px var(--panel),
+    48px 48px 0 8px var(--panel),
+    64px 48px 0 8px var(--panel),
+    /* Row 10 — bottom tentacles */
+    8px  56px 0 8px var(--panel),
+    24px 56px 0 8px var(--panel),
+    40px 56px 0 8px var(--panel),
+    64px 56px 0 8px var(--panel);
+
+  animation: ghost-walk 18s linear infinite;
+}
+
+@keyframes ghost-walk {
+  0%   { transform: translateX(0) translateY(0); }
+  25%  { transform: translateX(30vw) translateY(-12px); }
+  50%  { transform: translateX(60vw) translateY(0); }
+  75%  { transform: translateX(90vw) translateY(-8px); }
+  100% { transform: translateX(110vw) translateY(0); }
+}
+
+/* ==========================================================================
+   CHARACTER 2: SPACE INVADER  — marches across bottom of screen, left-to-right
+   ========================================================================== */
+.bg-invader {
+  width:  1px;
+  height: 1px;
+  bottom: 20px;
+  left: -100px;
+  background: transparent;
+  /* Classic Space Invader pixel art (11×8px grid, 6px pixel units) */
+  box-shadow:
+    /* Row 1 */
+    18px 0   0 6px var(--pink),
+    42px 0   0 6px var(--pink),
+    /* Row 2 */
+    12px 6px 0 6px var(--pink),
+    18px 6px 0 6px var(--pink),
+    24px 6px 0 6px var(--pink),
+    30px 6px 0 6px var(--pink),
+    36px 6px 0 6px var(--pink),
+    42px 6px 0 6px var(--pink),
+    48px 6px 0 6px var(--pink),
+    /* Row 3 — eyes */
+    6px  12px 0 6px var(--pink),
+    12px 12px 0 6px var(--pink),
+    18px 12px 0 6px #FFF8E7,    /* left eye */
+    24px 12px 0 6px var(--pink),
+    30px 12px 0 6px var(--pink),
+    36px 12px 0 6px #FFF8E7,    /* right eye */
+    42px 12px 0 6px var(--pink),
+    48px 12px 0 6px var(--pink),
+    54px 12px 0 6px var(--pink),
+    /* Row 4 */
+    6px  18px 0 6px var(--pink),
+    12px 18px 0 6px var(--pink),
+    18px 18px 0 6px var(--pink),
+    24px 18px 0 6px var(--pink),
+    30px 18px 0 6px var(--pink),
+    36px 18px 0 6px var(--pink),
+    42px 18px 0 6px var(--pink),
+    48px 18px 0 6px var(--pink),
+    54px 18px 0 6px var(--pink),
+    /* Row 5 */
+    18px 24px 0 6px var(--pink),
+    30px 24px 0 6px var(--pink),
+    42px 24px 0 6px var(--pink),
+    /* Row 6 — legs */
+    6px  30px 0 6px var(--pink),
+    18px 30px 0 6px var(--pink),
+    42px 30px 0 6px var(--pink),
+    54px 30px 0 6px var(--pink),
+    /* Row 7 */
+    12px 36px 0 6px var(--pink),
+    18px 36px 0 6px var(--pink),
+    42px 36px 0 6px var(--pink),
+    48px 36px 0 6px var(--pink);
+
+  animation: invader-march 24s linear infinite, invader-bob 0.5s steps(2) infinite;
+}
+
+@keyframes invader-march {
+  0%   { left: -100px; }
+  100% { left: 110vw; }
+}
+
+@keyframes invader-bob {
+  0%   { bottom: 20px; }
+  100% { bottom: 26px; }
+}
+
+/* ==========================================================================
+   CHARACTER 3: PIXEL HERO (WARRIOR)  — runs right-to-left at mid height
+   ========================================================================== */
+.bg-hero {
+  width:  1px;
+  height: 1px;
+  top: 55%;
+  right: -80px;
+  background: transparent;
+  /* Simple 8×12 hero character, 7px pixel units */
+  box-shadow:
+    /* Helmet */
+    7px  0   0 7px var(--yellow),
+    14px 0   0 7px var(--yellow),
+    21px 0   0 7px var(--yellow),
+    /* Head */
+    7px  7px 0 7px #F5C8A0,
+    14px 7px 0 7px #F5C8A0,
+    21px 7px 0 7px #F5C8A0,
+    /* Eyes */
+    7px  14px 0 7px var(--outline),
+    21px 14px 0 7px var(--outline),
+    /* Torso — armour */
+    0    21px 0 7px var(--teal),
+    7px  21px 0 7px var(--teal),
+    14px 21px 0 7px var(--teal),
+    21px 21px 0 7px var(--teal),
+    28px 21px 0 7px var(--teal),
+    0    28px 0 7px var(--teal),
+    7px  28px 0 7px var(--yellow),
+    14px 28px 0 7px var(--yellow),
+    21px 28px 0 7px var(--yellow),
+    28px 28px 0 7px var(--teal),
+    /* Legs */
+    7px  35px 0 7px var(--panel),
+    21px 35px 0 7px var(--panel),
+    /* Feet */
+    7px  42px 0 7px var(--outline),
+    14px 42px 0 7px var(--outline),
+    21px 42px 0 7px var(--outline),
+    28px 42px 0 7px var(--outline),
+    /* Sword */
+    35px 14px 0 7px #CCC,
+    35px 21px 0 7px #CCC,
+    35px 28px 0 7px var(--yellow),
+    35px 35px 0 7px #888;
+
+  animation: hero-run 30s linear infinite, hero-bob 0.4s steps(2) infinite;
+}
+
+@keyframes hero-run {
+  0%   { right: -80px; transform: scaleX(1);  }
+  100% { right: 110vw;  transform: scaleX(-1); }
+}
+
+@keyframes hero-bob {
+  0%   { margin-top: 0; }
+  100% { margin-top: -6px; }
+}
+
+/* ==========================================================================
+   CHARACTER 4: RETRO ROCKET — flies diagonally top-right across the page
+   ========================================================================== */
+.bg-rocket {
+  width:  1px;
+  height: 1px;
+  top: 70%;
+  left: -60px;
+  background: transparent;
+  /* Rocket sprite, 5px pixel units */
+  box-shadow:
+    /* Nose */
+    10px 0   0 5px var(--yellow),
+    /* Body */
+    5px  5px 0 5px var(--text),
+    10px 5px 0 5px var(--yellow),
+    15px 5px 0 5px var(--text),
+    5px  10px 0 5px var(--text),
+    10px 10px 0 5px var(--panel),
+    15px 10px 0 5px var(--text),
+    5px  15px 0 5px var(--text),
+    10px 15px 0 5px var(--panel),
+    15px 15px 0 5px var(--text),
+    /* Wings */
+    0    15px 0 5px var(--teal),
+    20px 15px 0 5px var(--teal),
+    /* Exhaust */
+    5px  20px 0 5px var(--pink),
+    10px 20px 0 5px var(--yellow),
+    15px 20px 0 5px var(--pink),
+    5px  25px 0 5px var(--outline),
+    15px 25px 0 5px var(--outline);
+
+  animation: rocket-fly 20s linear infinite;
+}
+
+@keyframes rocket-fly {
+  0%   { left: -60px;  top: 70%; }
+  100% { left: 110vw;  top: 10%; }
+}
+
+/* ==========================================================================
+   CHARACTER 5: SPINNING COIN  — floats up and right constantly
+   ========================================================================== */
+.bg-coin-float {
+  width: 1px;
+  height: 1px;
+  bottom: 40%;
+  left: 10%;
+  background: transparent;
+  box-shadow:
+    4px  0   0 4px var(--yellow),
+    8px  0   0 4px var(--yellow),
+    0    4px 0 4px var(--yellow),
+    12px 4px 0 4px var(--yellow),
+    0    8px 0 4px var(--yellow),
+    12px 8px 0 4px var(--yellow),
+    4px  12px 0 4px var(--yellow),
+    8px  12px 0 4px var(--yellow),
+    /* Shine */
+    4px  4px 0 4px #FFF5A0,
+    8px  4px 0 4px #FFF5A0;
+
+  animation: coin-float 6s steps(4) infinite alternate;
+}
+
+@keyframes coin-float {
+  0%   { transform: translateY(0)    scaleX(1);    opacity: 0.9; }
+  25%  { transform: translateY(-20px) scaleX(0.5); opacity: 0.7; }
+  50%  { transform: translateY(-40px) scaleX(0.05); opacity: 0.5; }
+  75%  { transform: translateY(-20px) scaleX(0.5); opacity: 0.7; }
+  100% { transform: translateY(0)    scaleX(1);    opacity: 0.9; }
+}
+
+/* Second coin at different position */
+.bg-coin-float-2 {
+  bottom: 60%;
+  left: 75%;
+  animation-duration: 4.5s;
+  animation-delay: -2s;
+  /* Inherit box-shadow colours from bg-coin-float via duplicate rule below */
+  width: 1px; height: 1px; position: absolute;
+  box-shadow:
+    4px  0   0 4px var(--teal),
+    8px  0   0 4px var(--teal),
+    0    4px 0 4px var(--teal),
+    12px 4px 0 4px var(--teal),
+    0    8px 0 4px var(--teal),
+    12px 8px 0 4px var(--teal),
+    4px  12px 0 4px var(--teal),
+    8px  12px 0 4px var(--teal),
+    4px  4px 0 4px #A0FFF5,
+    8px  4px 0 4px #A0FFF5;
+  animation: coin-float 4.5s steps(4) infinite alternate;
+  animation-delay: -2s;
+}
+
+/* ==========================================================================
+   CHARACTER 6: PIXEL MUSHROOM  — bobs slowly at the far right
+   ========================================================================== */
+.bg-mushroom {
+  width:  1px;
+  height: 1px;
+  bottom: 18px;
+  right: 8%;
+  background: transparent;
+  /* Classic mushroom: cap (pink) + stem (white) */
+  box-shadow:
+    /* Cap top */
+    12px 0   0 6px var(--pink),
+    18px 0   0 6px var(--pink),
+    24px 0   0 6px var(--pink),
+    /* Cap mid */
+    6px  6px 0 6px var(--pink),
+    12px 6px 0 6px #FFF8E7,
+    18px 6px 0 6px var(--pink),
+    24px 6px 0 6px #FFF8E7,
+    30px 6px 0 6px var(--pink),
+    /* Cap base */
+    6px  12px 0 6px var(--pink),
+    12px 12px 0 6px var(--pink),
+    18px 12px 0 6px var(--pink),
+    24px 12px 0 6px var(--pink),
+    30px 12px 0 6px var(--pink),
+    /* Stem */
+    12px 18px 0 6px #FFF8E7,
+    18px 18px 0 6px #FFF8E7,
+    24px 18px 0 6px #FFF8E7,
+    12px 24px 0 6px #FFF8E7,
+    18px 24px 0 6px #FFF8E7,
+    24px 24px 0 6px #FFF8E7;
+
+  animation: mushroom-bob 1.2s steps(2) infinite alternate;
+}
+
+@keyframes mushroom-bob {
+  0%   { transform: translateY(0); }
+  100% { transform: translateY(-8px); }
+}
+
+/* Second mushroom on left */
+.bg-mushroom-2 {
+  right: auto;
+  left: 5%;
+  animation-delay: -0.6s;
+  bottom: 18px;
+  width: 1px; height: 1px; position: absolute;
+  box-shadow:
+    12px 0   0 6px var(--teal),
+    18px 0   0 6px var(--teal),
+    24px 0   0 6px var(--teal),
+    6px  6px 0 6px var(--teal),
+    12px 6px 0 6px #FFF8E7,
+    18px 6px 0 6px var(--teal),
+    24px 6px 0 6px #FFF8E7,
+    30px 6px 0 6px var(--teal),
+    6px  12px 0 6px var(--teal),
+    12px 12px 0 6px var(--teal),
+    18px 12px 0 6px var(--teal),
+    24px 12px 0 6px var(--teal),
+    30px 12px 0 6px var(--teal),
+    12px 18px 0 6px #FFF8E7,
+    18px 18px 0 6px #FFF8E7,
+    24px 18px 0 6px #FFF8E7,
+    12px 24px 0 6px #FFF8E7,
+    18px 24px 0 6px #FFF8E7,
+    24px 24px 0 6px #FFF8E7;
+  animation: mushroom-bob 1.5s steps(2) infinite alternate;
+  animation-delay: -0.6s;
+}
+
+/* ==========================================================================
+   ENSURE ALL CONTENT SITS ABOVE THE BG SCENE  (z-index stacking)
+   ========================================================================== */
+.arcade-body > main,
+.arcade-body > footer {
+  position: relative;
+  z-index: 1;
+}
+
+/* Fixed layers keep their own `position: fixed` (set in their base rules).
+   Only stacking order is set here. Making them `relative` would push the
+   page content down and break the HUD, toast and CRT overlay. */
+.hud-topbar { z-index: 1000; }
+.crt-overlay { z-index: 99999; }
+.coin-shower-container { z-index: 99998; }
+.achievement-toast { z-index: 10000; }
+
+
+/* =============================================================================
+   16. RESPONSIVE DESIGN — Mobile-first: 320px base → 480px → 768px → 1024px
+   =============================================================================
+   Key fixes applied:
+   • HUD collapses to 2-row stacked layout on tiny screens
+   • XP text hidden on <480px to prevent overflow
+   • Tab buttons always show full text; wrap gracefully
+   • Cartridge body padding scales down for small screens
+   • Achievement toast capped to viewport width
+   • Touch targets enforced at all breakpoints
+   ============================================================================= */
+
+/* ── BASE / MOBILE (< 480px) ── */
+
+/* Collapse HUD into two stacked rows on tiny screens */
+.hud-inner {
+  flex-wrap: wrap;
+  padding: 4px 10px;
+  gap: 6px;
+}
+
+/* Hide long XP text label on tiny screens — keep bar */
+.xp-title {
+  display: none;
+}
+
+/* XP bar takes full width row on mobile */
+.xp-bar-wrapper {
+  flex: 1 1 100%;
+  order: 3; /* Push to last row */
+  max-width: 100%;
+}
+
+/* Compact HUD badge on mobile */
+.hud-badge {
+  min-height: 36px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+}
+
+/* Sound toggle more compact on mobile */
+.sound-toggle-btn {
+  font-size: 0.65rem;
+  padding: 4px 8px;
+  min-height: 36px;
+}
+
+/* Smaller HUD height on mobile */
+:root {
+  --hud-height: 72px; /* Taller for the 2-row mobile HUD */
+}
+
+/* Tabs: always stack vertically on small screens (default = mobile) */
+.arcade-tablist {
+  flex-direction: column;
+  gap: 4px;
+}
+
+.arcade-tab {
+  flex: 1 1 100%;   /* Full width per tab on mobile */
+  min-height: var(--touch-target);
+  font-size: 0.82rem;
+  padding: 10px 12px;
+  text-align: left;
+  justify-content: flex-start;
+}
+
+/* Cartridge padding tight on mobile */
+.cartridge-body {
+  padding: 16px 12px;
+}
+
+/* Hero section tighter on mobile */
+.hero-title-screen {
+  padding: 20px 0 16px 0;
+}
+
+.arcade-marquee-box {
+  padding: 16px 12px;
+}
+
+/* Hero sprites row hidden on tiny screens to save space */
+.hero-sprites-row {
+  gap: 16px;
+}
+
+/* Achievement toast: full width on mobile */
+.achievement-toast {
+  bottom: 12px;
+  right: 8px;
+  left: 8px;
+  max-width: calc(100vw - 16px);
+}
+
+/* Quest action buttons wrap nicely */
+.quest-actions-row {
+  gap: 8px;
+}
+
+/* Footer tighter on mobile */
+.arcade-footer {
+  padding: 28px 0 20px 0;
+}
+
+/* Background characters — smaller scale on mobile */
+.bg-ghost {
+  transform: scale(0.6);
+  transform-origin: left center;
+}
+.bg-invader {
+  transform: scale(0.6);
+  transform-origin: left bottom;
+}
+.bg-hero {
+  transform: scale(0.6);
+  transform-origin: right top;
+}
+.bg-rocket {
+  transform: scale(0.55);
+  transform-origin: left center;
+}
+.bg-mushroom,
+.bg-mushroom-2 {
+  transform: scale(0.65);
+  transform-origin: bottom center;
+}
+
+
+/* ── SMALL PHONES (>= 360px) ── */
+@media (min-width: 360px) {
+  .arcade-tab {
+    font-size: 0.85rem;
+    padding: 10px 14px;
+  }
+
+  .cartridge-body {
+    padding: 16px 14px;
+  }
+}
+
+
+/* ── SMALL TABLETS / LARGE PHONES (>= 480px) ── */
+@media (min-width: 480px) {
+  /* HUD back to single row */
+  :root { --hud-height: 58px; }
+
+  .hud-inner {
+    flex-wrap: nowrap;
+    padding: 0 16px;
+  }
+
+  .xp-bar-wrapper {
+    flex: 1;
+    order: 0;
+    max-width: 580px;
+  }
+
+  .xp-title {
+    display: inline; /* Restore XP label */
+  }
+
+  .hud-badge {
+    min-height: var(--touch-target);
+    padding: 4px 10px;
+    font-size: 0.85rem;
+  }
+
+  .sound-toggle-btn {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+    min-height: var(--touch-target);
+  }
+
+  /* Tabs: 2-up layout at 480px */
+  .arcade-tablist {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .arcade-tab {
+    flex: 1 1 calc(50% - 6px);
+    text-align: center;
+    justify-content: center;
+    font-size: 0.85rem;
+  }
+
+  .cartridge-body {
+    padding: 20px 16px;
+  }
+
+  .hero-title-screen {
+    padding: 32px 0 24px 0;
+  }
+
+  .arcade-marquee-box {
+    padding: 20px 16px;
+  }
+
+  /* Achievement toast back to right-aligned */
+  .achievement-toast {
+    bottom: 24px;
+    right: 16px;
+    left: auto;
+    max-width: 340px;
+  }
+
+  @supports (display: grid) {
+    .quest-grid {
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+    .high-score-board {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  /* Background chars normal scale from 480px up */
+  .bg-ghost,
+  .bg-invader,
+  .bg-hero,
+  .bg-rocket,
+  .bg-mushroom,
+  .bg-mushroom-2 {
+    transform: scale(1);
+  }
+}
+
+
+/* ── TABLETS (>= 768px) ── */
+@media (min-width: 768px) {
+  /* Tabs: all in one horizontal row */
+  .arcade-tab {
+    flex: 1 1 auto;
+    font-size: 0.88rem;
+    padding: 12px 16px;
+  }
+
+  @supports (display: grid) {
+    .item-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .skills-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .bestiary-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .cartridge-body {
+    padding: 28px 24px;
+  }
+
+  .arcade-footer {
+    padding: 48px 0 36px 0;
+  }
+
+  .achievement-toast {
+    right: 24px;
+    max-width: 380px;
+  }
+}
+
+
+/* ── DESKTOP (>= 1024px) ── */
+@media (min-width: 1024px) {
+  .arcade-tab {
+    font-size: 0.95rem;
+    padding: 14px 20px;
+  }
+
+  .cartridge-body {
+    padding: 32px 28px;
+  }
+
+  @supports (display: grid) {
+    .item-grid {
+      grid-template-columns: repeat(3, 1fr);
+    }
+    .bestiary-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+}
+
+/* -----------------------------------------------------------------------------
+   17. PREFERS-REDUCED-MOTION OVERRIDES
+   ----------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .crt-overlay {
+    animation: none !important;
+  }
+
+  /* Stop all background character animations */
+  .bg-ghost,
+  .bg-invader,
+  .bg-hero,
+  .bg-rocket,
+  .bg-coin-float,
+  .bg-coin-float-2,
+  .bg-mushroom,
+  .bg-mushroom-2,
+  .bg-stars {
+    animation: none !important;
+    /* Keep them visible but static */
+    opacity: 0.15 !important;
+  }
+
+  .hero-sprite-anim,
+  .coin-sprite-anim,
+  .blink-text,
+  .blink-fast {
+    animation: none !important;
+  }
+
+  .achievement-toast {
+    transition: none !important;
+  }
+
+  .falling-coin {
+    animation: none !important;
+    display: none !important;
+  }
+}

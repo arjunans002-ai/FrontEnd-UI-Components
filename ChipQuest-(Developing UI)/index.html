@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+  <!--
+    RETRO 8-BIT ARCADE TAB SYSTEM COMPONENT
+    ======================================
+    High-fidelity, accessible, fully responsive 8-bit arcade interface.
+    Features:
+      - WCAG 2.1 AA Compliant ARIA tablist pattern
+      - CRT phosphor scanline & vignette visual overlay
+      - Pixel-stepped UI without curved radii
+      - Dynamic XP Progress Tracking & Retro Achievement Toasts
+      - Web Audio API 8-bit sound synthesis
+      - Progressive enhancement (.no-js support)
+  -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="A complete retro 8-bit arcade-themed accessible interactive tab system component featuring quests, inventory, skills, and bestiary modules.">
+  <meta name="theme-color" content="#1B0B3A">
+  <title>CHIP-QUEST '84 // ARCADE TAB SYSTEM</title>
+
+  <!-- Progressive Enhancement: Immediately swap 'no-js' to 'js' class -->
+  <script>
+    document.documentElement.className = document.documentElement.className.replace(/\bno-js\b/, 'js');
+  </script>
+
+  <!-- Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="arcade-body">
+
+  <!-- =========================================================================
+       ANIMATED BACKGROUND GAMING CHARACTERS SCENE
+       All elements are aria-hidden and pointer-events:none — purely decorative.
+       Sprites are drawn as CSS box-shadow pixel art on tiny 1px elements.
+       ========================================================================= -->
+  <div class="bg-scene" aria-hidden="true">
+    <!-- Twinkling pixel stars -->
+    <span class="bg-stars"></span>
+
+    <!-- Ghost character — drifts across the upper area -->
+    <span class="bg-char bg-ghost"></span>
+
+    <!-- Space Invader — marches across the bottom -->
+    <span class="bg-char bg-invader"></span>
+
+    <!-- Pixel Hero / Warrior — runs right-to-left at mid height -->
+    <span class="bg-char bg-hero"></span>
+
+    <!-- Retro Rocket — flies diagonally across the page -->
+    <span class="bg-char bg-rocket"></span>
+
+    <!-- Floating coins (spinning pixel coins at different positions) -->
+    <span class="bg-char bg-coin-float"></span>
+    <span class="bg-char bg-coin-float-2"></span>
+
+    <!-- Pixel Mushrooms — bob on the ground line -->
+    <span class="bg-char bg-mushroom"></span>
+    <span class="bg-char bg-mushroom-2"></span>
+  </div>
+
+  <!-- =========================================================================
+       FIXED TOP: 8-BIT XP PROGRESS BAR & HUD
+       ========================================================================= -->
+  <header class="hud-topbar" role="banner" aria-label="Game Status Bar">
+    <div class="hud-inner">
+      <!-- Player Level Display -->
+      <div class="hud-badge" id="hud-level-badge" aria-label="Current Player Level">
+        <span class="hud-badge-title">LVL</span>
+        <span class="hud-badge-value" id="lvl-display" aria-live="polite">01</span>
+      </div>
+
+      <!-- XP Bar Container -->
+      <div class="xp-bar-wrapper">
+        <div class="xp-bar-labels">
+          <span class="xp-title">EXP PROGRESS</span>
+          <span class="xp-counter" id="xp-text" aria-live="polite">0 / 1000 XP</span>
+        </div>
+        <div class="xp-bar-track" role="progressbar" id="xp-progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="1000" aria-label="Experience Points Progress">
+          <div class="xp-bar-fill" id="xp-bar-fill" style="width: 0%;"></div>
+          <!-- Pixel segment notches -->
+          <div class="xp-bar-segments" aria-hidden="true">
+            <span class="xp-seg"></span><span class="xp-seg"></span><span class="xp-seg"></span><span class="xp-seg"></span>
+            <span class="xp-seg"></span><span class="xp-seg"></span><span class="xp-seg"></span><span class="xp-seg"></span>
+            <span class="xp-seg"></span><span class="xp-seg"></span><span class="xp-seg"></span><span class="xp-seg"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sound Toggle Control -->
+      <div class="hud-audio-control">
+        <button type="button" id="sound-toggle" class="arcade-btn hud-btn sound-toggle-btn" aria-pressed="false" aria-label="Toggle 8-bit sound effects: currently muted">
+          <span class="sound-icon" aria-hidden="true">🔇</span>
+          <span class="sound-label">SFX: OFF</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- =========================================================================
+       CRT MONITOR SCREEN OVERLAY (Scanlines, Vignette, Phosphor Flicker)
+       ========================================================================= -->
+  <div class="crt-overlay" aria-hidden="true"></div>
+
+  <!-- =========================================================================
+       ACHIEVEMENT TOAST NOTIFICATION CONTAINER (Polite Live Region)
+       ========================================================================= -->
+  <aside id="achievement-toast" class="achievement-toast" role="status" aria-live="polite" aria-atomic="true" hidden>
+    <div class="achievement-card">
+      <div class="achievement-pixel-icon" aria-hidden="true">
+        <!-- Pixel Trophy Icon -->
+        <svg viewBox="0 0 16 16" width="32" height="32" fill="currentColor">
+          <rect x="3" y="1" width="10" height="2" fill="#FFD93D"/>
+          <rect x="2" y="3" width="12" height="4" fill="#FFD93D"/>
+          <rect x="4" y="7" width="8" height="2" fill="#FFD93D"/>
+          <rect x="6" y="9" width="4" height="2" fill="#FFD93D"/>
+          <rect x="5" y="11" width="6" height="2" fill="#FFD93D"/>
+          <rect x="4" y="13" width="8" height="2" fill="#FF2E93"/>
+          <rect x="1" y="3" width="2" height="3" fill="#00E5C7"/>
+          <rect x="13" y="3" width="2" height="3" fill="#00E5C7"/>
+        </svg>
+      </div>
+      <div class="achievement-content">
+        <span class="achievement-badge">★ ACHIEVEMENT UNLOCKED ★</span>
+        <h3 class="achievement-title" id="toast-title">SYSTEM READY</h3>
+        <p class="achievement-desc" id="toast-desc">Tab cartridge successfully seated into console.</p>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Coin Shower Container for Konami Easter Egg -->
+  <div id="coin-shower-container" class="coin-shower-container" aria-hidden="true"></div>
+
+  <!-- =========================================================================
+       PROGRESSIVE ENHANCEMENT: NOSCRIPT BANNER
+       ========================================================================= -->
+  <noscript>
+    <div class="noscript-banner" role="alert">
+      <div class="arcade-container">
+        <p class="noscript-text">
+          <strong>[SYSTEM NOTICE // NO-JS MODE]:</strong> JavaScript is disabled or unsupported in this terminal.
+          All cartridge data modules (Quest Log, Inventory, Skills, Bestiary) are fully loaded and rendered below in continuous arcade reel mode.
+        </p>
+      </div>
+    </div>
+  </noscript>
+
+  <!-- =========================================================================
+       MAIN CONTENT CONTAINER
+       ========================================================================= -->
+  <main id="main-content" class="arcade-main">
+
+    <!-- =======================================================================
+         HERO SECTION: 8-BIT TITLE SCREEN
+         ======================================================================= -->
+    <section class="hero-title-screen" id="hero-title-screen" aria-labelledby="arcade-title">
+      <div class="arcade-container hero-container">
+
+        <!-- Arcade Marquee Header -->
+        <div class="arcade-marquee-box">
+          <div class="marquee-corner marquee-tl" aria-hidden="true"></div>
+          <div class="marquee-corner marquee-tr" aria-hidden="true"></div>
+          <div class="marquee-corner marquee-bl" aria-hidden="true"></div>
+          <div class="marquee-corner marquee-br" aria-hidden="true"></div>
+
+          <div class="marquee-content">
+            <span class="arcade-edition-tag">★ COIN-OP EDITION 1984 ★</span>
+            <h1 id="arcade-title" class="arcade-title-glitch" data-text="CHIP-QUEST '84">CHIP-QUEST '84</h1>
+            <p class="arcade-subtitle">HIGH PRECISION RETRO TAB CARTRIDGE SYSTEM</p>
+          </div>
+        </div>
+
+        <!-- 8-Bit Pixel Character & Coin Display -->
+        <div class="hero-sprites-row" aria-label="Animated Pixel Character and Golden Coin">
+          <!-- Walking Hero Character (Inline 8-bit SVG) -->
+          <div class="pixel-sprite-wrapper hero-sprite-anim" aria-label="8-bit Pixel Knight Adventurer">
+            <svg class="pixel-svg hero-pixel-character" viewBox="0 0 16 20" width="96" height="120" role="img" aria-label="Retro pixel hero sprite">
+              <!-- Helmet & Horns -->
+              <rect x="5" y="1" width="6" height="2" fill="#00E5C7" />
+              <rect x="3" y="2" width="2" height="3" fill="#FFD93D" />
+              <rect x="11" y="2" width="2" height="3" fill="#FFD93D" />
+              <rect x="4" y="3" width="8" height="4" fill="#00E5C7" />
+              <!-- Face / Visor -->
+              <rect x="5" y="5" width="6" height="2" fill="#0D0221" />
+              <rect x="6" y="5" width="2" height="1" fill="#FF2E93" />
+              <rect x="9" y="5" width="2" height="1" fill="#FF2E93" />
+              <!-- Chest & Armor -->
+              <rect x="4" y="7" width="8" height="5" fill="#6C2BD9" />
+              <rect x="6" y="8" width="4" height="3" fill="#FFD93D" />
+              <!-- Shield on Left Arm -->
+              <rect x="1" y="7" width="3" height="6" fill="#00E5C7" />
+              <rect x="2" y="8" width="1" height="4" fill="#0D0221" />
+              <!-- Sword on Right Arm -->
+              <rect x="12" y="5" width="2" height="7" fill="#FFF8E7" />
+              <rect x="11" y="9" width="4" height="1" fill="#FFD93D" />
+              <rect x="12" y="10" width="2" height="3" fill="#8B46FF" />
+              <!-- Belt -->
+              <rect x="4" y="12" width="8" height="2" fill="#0D0221" />
+              <rect x="7" y="12" width="2" height="2" fill="#FFD93D" />
+              <!-- Legs & Boots -->
+              <rect x="4" y="14" width="3" height="5" fill="#FF2E93" />
+              <rect x="9" y="14" width="3" height="5" fill="#FF2E93" />
+              <rect x="3" y="18" width="4" height="2" fill="#0D0221" />
+              <rect x="9" y="18" width="4" height="2" fill="#0D0221" />
+            </svg>
+          </div>
+
+          <!-- Golden 8-Bit Coin (Inline SVG) -->
+          <div class="pixel-sprite-wrapper coin-sprite-anim" aria-label="Rotating 8-bit Golden Token">
+            <svg class="pixel-svg coin-pixel-svg" viewBox="0 0 16 16" width="64" height="64" role="img" aria-label="Spinning golden coin">
+              <rect x="4" y="1" width="8" height="2" fill="#0D0221"/>
+              <rect x="2" y="3" width="12" height="2" fill="#0D0221"/>
+              <rect x="1" y="5" width="14" height="6" fill="#0D0221"/>
+              <rect x="2" y="11" width="12" height="2" fill="#0D0221"/>
+              <rect x="4" y="13" width="8" height="2" fill="#0D0221"/>
+
+              <!-- Coin Body Inner -->
+              <rect x="4" y="2" width="8" height="1" fill="#FFD93D"/>
+              <rect x="3" y="3" width="10" height="2" fill="#FFD93D"/>
+              <rect x="2" y="5" width="12" height="6" fill="#FFD93D"/>
+              <rect x="3" y="11" width="10" height="2" fill="#FFD93D"/>
+              <rect x="4" y="13" width="8" height="1" fill="#FFD93D"/>
+
+              <!-- Coin Emboss & Highlight -->
+              <rect x="3" y="4" width="3" height="2" fill="#FFF8E7"/>
+              <rect x="5" y="6" width="6" height="4" fill="#E5A800"/>
+              <rect x="7" y="6" width="2" height="4" fill="#0D0221"/>
+            </svg>
+          </div>
+        </div>
+
+        <!-- Press Start CTA -->
+        <div class="hero-actions">
+          <a href="#tab-system-section" id="btn-press-start" class="arcade-btn hero-start-btn" role="button">
+            <span class="blink-text">▶ PRESS START ◀</span>
+          </a>
+          <p class="hero-insert-coin">CREDIT 01 &bull; 1 PLAYER ONLY</p>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         MAIN TAB COMPONENT SECTION
+         ======================================================================= -->
+    <section class="arcade-tabs-section" id="tab-system-section" aria-labelledby="tab-section-heading">
+      <div class="arcade-container">
+
+        <!-- Section Heading -->
+        <div class="section-title-wrap">
+          <h2 id="tab-section-heading" class="pixel-section-title">SYSTEM MODULES // SELECT CARTRIDGE</h2>
+          <div class="pixel-divider" aria-hidden="true"></div>
+        </div>
+
+        <!-- TAB COMPONENT ROOT (Auto-initialized by ArcadeTabs.create) -->
+        <div class="arcade-tabs" data-component="tabs" data-default-tab="0" data-animated="true">
+
+          <!-- TAB NAVIGATION LIST (role="tablist") -->
+          <div class="arcade-tablist" role="tablist" aria-label="System Cartridge Tabs">
+            <!-- Tab 1: Quest Log -->
+            <button
+              type="button"
+              role="tab"
+              id="tab-quests"
+              class="arcade-tab"
+              aria-controls="panel-quests"
+              aria-selected="true"
+              tabindex="0"
+              data-tab-index="0"
+            >
+              <span class="tab-glyph" aria-hidden="true">⚔️</span>
+              <span class="tab-label">QUEST LOG</span>
+              <span class="tab-active-indicator" aria-hidden="true">▶</span>
+            </button>
+
+            <!-- Tab 2: Inventory -->
+            <button
+              type="button"
+              role="tab"
+              id="tab-inventory"
+              class="arcade-tab"
+              aria-controls="panel-inventory"
+              aria-selected="false"
+              tabindex="-1"
+              data-tab-index="1"
+            >
+              <span class="tab-glyph" aria-hidden="true">🎒</span>
+              <span class="tab-label">INVENTORY</span>
+              <span class="tab-active-indicator" aria-hidden="true">▶</span>
+            </button>
+
+            <!-- Tab 3: Skills -->
+            <button
+              type="button"
+              role="tab"
+              id="tab-skills"
+              class="arcade-tab"
+              aria-controls="panel-skills"
+              aria-selected="false"
+              tabindex="-1"
+              data-tab-index="2"
+            >
+              <span class="tab-glyph" aria-hidden="true">⚡</span>
+              <span class="tab-label">SKILLS</span>
+              <span class="tab-active-indicator" aria-hidden="true">▶</span>
+            </button>
+
+            <!-- Tab 4: Bestiary -->
+            <button
+              type="button"
+              role="tab"
+              id="tab-bestiary"
+              class="arcade-tab"
+              aria-controls="panel-bestiary"
+              aria-selected="false"
+              tabindex="-1"
+              data-tab-index="3"
+            >
+              <span class="tab-glyph" aria-hidden="true">👾</span>
+              <span class="tab-label">BESTIARY</span>
+              <span class="tab-active-indicator" aria-hidden="true">▶</span>
+            </button>
+          </div>
+
+          <!-- TAB PANELS CONTAINER -->
+          <div class="arcade-panels-stage">
+
+            <!-- =============================================================
+                 PANEL 1: QUEST LOG
+                 ============================================================= -->
+            <section
+              id="panel-quests"
+              class="arcade-tabpanel cartridge-panel"
+              role="tabpanel"
+              aria-labelledby="tab-quests"
+              tabindex="0"
+            >
+              <div class="cartridge-header">
+                <span class="cartridge-rom-id">ROM BANK #01 // MISSION_DISPATCH</span>
+                <span class="cartridge-status">STATUS: ONLINE</span>
+              </div>
+
+              <div class="cartridge-body">
+                <h3 class="no-js-title">QUEST LOG - ACTIVE MISSIONS</h3>
+
+                <!-- Primary Active Quest Banner -->
+                <article class="quest-card quest-featured">
+                  <div class="quest-badge-row">
+                    <span class="pixel-pill pill-pink">PRIMARY CAMPAIGN</span>
+                    <span class="quest-xp-reward">+5,000 XP</span>
+                  </div>
+                  <h4 class="quest-title">DEFEAT THE BYTE BARON AT KILOBYTE KEEP</h4>
+                  <p class="quest-description">
+                    The Byte Baron has intercepted the main CPU bus and corrupted the core register files.
+                    Infiltrate the 8-bit citadel, bypass the glitch sentries, and reboot the mainframe before total stack overflow occurs.
+                  </p>
+                  <div class="quest-progress-box">
+                    <div class="quest-progress-label">
+                      <span>OBJECTIVES COMPLETED</span>
+                      <span>2 / 3</span>
+                    </div>
+                    <div class="quest-track" aria-hidden="true">
+                      <div class="quest-fill" style="width: 66%;"></div>
+                    </div>
+                  </div>
+                  <div class="quest-actions-row">
+                    <button type="button" class="arcade-btn btn-sm btn-teal quest-action-btn">TRACK MISSION</button>
+                    <button type="button" class="arcade-btn btn-sm btn-yellow quest-action-btn">VIEW MAP</button>
+                  </div>
+                </article>
+
+                <!-- Side Quests Grid -->
+                <div class="quest-grid">
+                  <!-- Side Quest 1 -->
+                  <article class="quest-card quest-side">
+                    <div class="quest-badge-row">
+                      <span class="pixel-pill pill-yellow">SIDE BOUNTY</span>
+                      <span class="quest-xp-reward">+1,200 XP</span>
+                    </div>
+                    <h5 class="quest-subhead">COLLECT 256 FLOATING COIN TOKENS</h5>
+                    <p class="quest-description">
+                      Gather scattered sprite tokens across sectors 1 through 4 to unlock an extra continue credit.
+                    </p>
+                    <div class="quest-mini-stat">PROGRESS: 184 / 256 COINS</div>
+                    <button type="button" class="arcade-btn btn-xs btn-outline">CLAIM REWARD</button>
+                  </article>
+
+                  <!-- Side Quest 2 -->
+                  <article class="quest-card quest-side">
+                    <div class="quest-badge-row">
+                      <span class="pixel-pill pill-teal">SECRET EVENT</span>
+                      <span class="quest-xp-reward">+2,500 XP</span>
+                    </div>
+                    <h5 class="quest-subhead">DISCOVER THE SECRET KEYBOARD GLITCH</h5>
+                    <p class="quest-description">
+                      Ancient arcade folklore speaks of a 10-key sequence: &uarr; &uarr; &darr; &darr; &larr; &rarr; &larr; &rarr; B A.
+                    </p>
+                    <div class="quest-mini-stat">STATUS: UNEXPLORED</div>
+                    <button type="button" class="arcade-btn btn-xs btn-pink">HINT LOG</button>
+                  </article>
+                </div>
+              </div>
+            </section>
+
+            <!-- =============================================================
+                 PANEL 2: INVENTORY
+                 ============================================================= -->
+            <section
+              id="panel-inventory"
+              class="arcade-tabpanel cartridge-panel"
+              role="tabpanel"
+              aria-labelledby="tab-inventory"
+              tabindex="0"
+              hidden
+            >
+              <div class="cartridge-header">
+                <span class="cartridge-rom-id">ROM BANK #02 // ITEM_VAULT</span>
+                <span class="cartridge-status">STORAGE: 6 / 8 SLOTS</span>
+              </div>
+
+              <div class="cartridge-body">
+                <h3 class="no-js-title">INVENTORY - CARTRIDGE EQUIPMENT</h3>
+
+                <!-- Inventory Item Grid -->
+                <div class="item-grid" role="list" aria-label="Equipped items and gear">
+
+                  <!-- Item 1 -->
+                  <div class="item-card rarity-legendary" role="listitem">
+                    <div class="item-icon-box" aria-hidden="true">🗡️</div>
+                    <div class="item-details">
+                      <span class="item-rarity">LEGENDARY</span>
+                      <h4 class="item-name">PIXEL BUSTER SWORD</h4>
+                      <p class="item-stats">+64 ATK &bull; +12 CRIT</p>
+                      <button type="button" class="arcade-btn btn-xs btn-teal">EQUIPPED</button>
+                    </div>
+                  </div>
+
+                  <!-- Item 2 -->
+                  <div class="item-card rarity-epic" role="listitem">
+                    <div class="item-icon-box" aria-hidden="true">🛡️</div>
+                    <div class="item-details">
+                      <span class="item-rarity">EPIC</span>
+                      <h4 class="item-name">1-UP MUSHROOM SHIELD</h4>
+                      <p class="item-stats">+80 DEF &bull; AUTO-REVIVE</p>
+                      <button type="button" class="arcade-btn btn-xs btn-yellow">EQUIPPED</button>
+                    </div>
+                  </div>
+
+                  <!-- Item 3 -->
+                  <div class="item-card rarity-rare" role="listitem">
+                    <div class="item-icon-box" aria-hidden="true">👓</div>
+                    <div class="item-details">
+                      <span class="item-rarity">RARE</span>
+                      <h4 class="item-name">CRT SCANLINE VISOR</h4>
+                      <p class="item-stats">+35 PERCEPTION &bull; NIGHT VISION</p>
+                      <button type="button" class="arcade-btn btn-xs btn-pink">EQUIP</button>
+                    </div>
+                  </div>
+
+                  <!-- Item 4 -->
+                  <div class="item-card rarity-rare" role="listitem">
+                    <div class="item-icon-box" aria-hidden="true">🥾</div>
+                    <div class="item-details">
+                      <span class="item-rarity">RARE</span>
+                      <h4 class="item-name">OVERCLOCKED ROM BOOTS</h4>
+                      <p class="item-stats">+50 SPEED &bull; DOUBLE JUMP</p>
+                      <button type="button" class="arcade-btn btn-xs btn-pink">EQUIP</button>
+                    </div>
+                  </div>
+
+                  <!-- Item 5 -->
+                  <div class="item-card rarity-common" role="listitem">
+                    <div class="item-icon-box" aria-hidden="true">🧪</div>
+                    <div class="item-details">
+                      <span class="item-rarity">COMMON</span>
+                      <h4 class="item-name">BYTE POTION x9</h4>
+                      <p class="item-stats">RESTORES 250 HP PER SIP</p>
+                      <button type="button" class="arcade-btn btn-xs btn-teal">USE ITEM</button>
+                    </div>
+                  </div>
+
+                  <!-- Item 6 -->
+                  <div class="item-card rarity-key" role="listitem">
+                    <div class="item-icon-box" aria-hidden="true">🔑</div>
+                    <div class="item-details">
+                      <span class="item-rarity">KEY ITEM</span>
+                      <h4 class="item-name">GOLDEN JOYSTICK TOKEN</h4>
+                      <p class="item-stats">OPENS LEVEL 4 SECTOR GATE</p>
+                      <button type="button" class="arcade-btn btn-xs btn-yellow" disabled>KEY ITEM</button>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </section>
+
+            <!-- =============================================================
+                 PANEL 3: SKILLS
+                 ============================================================= -->
+            <section
+              id="panel-skills"
+              class="arcade-tabpanel cartridge-panel"
+              role="tabpanel"
+              aria-labelledby="tab-skills"
+              tabindex="0"
+              hidden
+            >
+              <div class="cartridge-header">
+                <span class="cartridge-rom-id">ROM BANK #03 // SKILL_TREE</span>
+                <span class="cartridge-status">SP AVAILABLE: 4 PTS</span>
+              </div>
+
+              <div class="cartridge-body">
+                <h3 class="no-js-title">SKILLS - ABILITY REGISTERS</h3>
+
+                <div class="skills-grid">
+
+                  <!-- Skill 1 -->
+                  <article class="skill-card">
+                    <div class="skill-header">
+                      <span class="skill-icon" aria-hidden="true">💨</span>
+                      <div class="skill-titles">
+                        <h4 class="skill-name">TURBO DASH</h4>
+                        <span class="skill-meta">COOLDOWN: 2 SEC &bull; COST: 10 MP</span>
+                      </div>
+                    </div>
+                    <p class="skill-description">
+                      Perform an instantaneous 8-directional phase through hazardous spikes and enemy bullets with 0.5s invulnerability.
+                    </p>
+                    <div class="skill-level-row">
+                      <span>MASTERY: LEVEL 3/5</span>
+                      <div class="skill-pips" aria-hidden="true">
+                        <span class="pip active"></span><span class="pip active"></span><span class="pip active"></span><span class="pip"></span><span class="pip"></span>
+                      </div>
+                    </div>
+                    <button type="button" class="arcade-btn btn-sm btn-teal">UPGRADE (-1 SP)</button>
+                  </article>
+
+                  <!-- Skill 2 -->
+                  <article class="skill-card">
+                    <div class="skill-header">
+                      <span class="skill-icon" aria-hidden="true">🌊</span>
+                      <div class="skill-titles">
+                        <h4 class="skill-name">8-BIT SCANWAVE</h4>
+                        <span class="skill-meta">COOLDOWN: 8 SEC &bull; COST: 35 MP</span>
+                      </div>
+                    </div>
+                    <p class="skill-description">
+                      Unleash an oscillating phosphor wave across the entire horizontal scanline, stunning all adjacent enemies for 3 seconds.
+                    </p>
+                    <div class="skill-level-row">
+                      <span>MASTERY: LEVEL 5/5 [MAX]</span>
+                      <div class="skill-pips" aria-hidden="true">
+                        <span class="pip active"></span><span class="pip active"></span><span class="pip active"></span><span class="pip active"></span><span class="pip active"></span>
+                      </div>
+                    </div>
+                    <button type="button" class="arcade-btn btn-sm btn-yellow" disabled>MAX LEVEL</button>
+                  </article>
+
+                  <!-- Skill 3 -->
+                  <article class="skill-card">
+                    <div class="skill-header">
+                      <span class="skill-icon" aria-hidden="true">🛡️</span>
+                      <div class="skill-titles">
+                        <h4 class="skill-name">POLY-SHIELD MATRIX</h4>
+                        <span class="skill-meta">COOLDOWN: 15 SEC &bull; COST: 50 MP</span>
+                      </div>
+                    </div>
+                    <p class="skill-description">
+                      Constructs a low-polygon kinetic barrier that deflects 50% of incoming physical projectiles back toward the attacker.
+                    </p>
+                    <div class="skill-level-row">
+                      <span>MASTERY: LEVEL 2/5</span>
+                      <div class="skill-pips" aria-hidden="true">
+                        <span class="pip active"></span><span class="pip active"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span>
+                      </div>
+                    </div>
+                    <button type="button" class="arcade-btn btn-sm btn-teal">UPGRADE (-1 SP)</button>
+                  </article>
+
+                  <!-- Skill 4 -->
+                  <article class="skill-card">
+                    <div class="skill-header">
+                      <span class="skill-icon" aria-hidden="true">⚡</span>
+                      <div class="skill-titles">
+                        <h4 class="skill-name">GLITCH TELEPORT</h4>
+                        <span class="skill-meta">COOLDOWN: 20 SEC &bull; COST: 65 MP</span>
+                      </div>
+                    </div>
+                    <p class="skill-description">
+                      Force a controlled memory leak that shifts coordinates directly behind the nearest high-threat target.
+                    </p>
+                    <div class="skill-level-row">
+                      <span>MASTERY: LEVEL 1/5</span>
+                      <div class="skill-pips" aria-hidden="true">
+                        <span class="pip active"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span><span class="pip"></span>
+                      </div>
+                    </div>
+                    <button type="button" class="arcade-btn btn-sm btn-teal">UPGRADE (-1 SP)</button>
+                  </article>
+
+                </div>
+              </div>
+            </section>
+
+            <!-- =============================================================
+                 PANEL 4: BESTIARY
+                 ============================================================= -->
+            <section
+              id="panel-bestiary"
+              class="arcade-tabpanel cartridge-panel"
+              role="tabpanel"
+              aria-labelledby="tab-bestiary"
+              tabindex="0"
+              hidden
+            >
+              <div class="cartridge-header">
+                <span class="cartridge-rom-id">ROM BANK #04 // MONSTER_ENCYCLOPEDIA</span>
+                <span class="cartridge-status">INDEXED: 4 ENTRIES</span>
+              </div>
+
+              <div class="cartridge-body">
+                <h3 class="no-js-title">BESTIARY - RECORDED ENEMIES</h3>
+
+                <div class="bestiary-grid">
+
+                  <!-- Monster 1 -->
+                  <article class="monster-card">
+                    <div class="monster-badge-row">
+                      <span class="pixel-pill pill-green">THREAT: LOW</span>
+                      <span class="monster-id">#001</span>
+                    </div>
+                    <div class="monster-visual" aria-hidden="true">🟢</div>
+                    <h4 class="monster-name">MEGABYTE SLIME</h4>
+                    <ul class="monster-stats">
+                      <li><strong>HP:</strong> 120</li>
+                      <li><strong>ATK:</strong> 15</li>
+                      <li><strong>DEF:</strong> 05</li>
+                      <li><strong>WEAKNESS:</strong> FIRE / SCANWAVE</li>
+                    </ul>
+                    <p class="monster-lore">
+                      A gelatinous cluster of orphaned memory blocks roaming low-level heaps. Splits into two byte-sized slimes upon impact.
+                    </p>
+                  </article>
+
+                  <!-- Monster 2 -->
+                  <article class="monster-card">
+                    <div class="monster-badge-row">
+                      <span class="pixel-pill pill-yellow">THREAT: MED</span>
+                      <span class="monster-id">#014</span>
+                    </div>
+                    <div class="monster-visual" aria-hidden="true">🦇</div>
+                    <h4 class="monster-name">PIXELATED BAT</h4>
+                    <ul class="monster-stats">
+                      <li><strong>HP:</strong> 240</li>
+                      <li><strong>ATK:</strong> 38</li>
+                      <li><strong>DEF:</strong> 18</li>
+                      <li><strong>WEAKNESS:</strong> LIGHT / ARROW</li>
+                    </ul>
+                    <p class="monster-lore">
+                      Erratically flutters along sine-wave paths. Emits ultrasonic beeps that disrupt player targeting reticles.
+                    </p>
+                  </article>
+
+                  <!-- Monster 3 -->
+                  <article class="monster-card">
+                    <div class="monster-badge-row">
+                      <span class="pixel-pill pill-pink">THREAT: HIGH</span>
+                      <span class="monster-id">#042</span>
+                    </div>
+                    <div class="monster-visual" aria-hidden="true">💀</div>
+                    <h4 class="monster-name">CYBER-SKULL REAPER</h4>
+                    <ul class="monster-stats">
+                      <li><strong>HP:</strong> 950</li>
+                      <li><strong>ATK:</strong> 85</li>
+                      <li><strong>DEF:</strong> 50</li>
+                      <li><strong>WEAKNESS:</strong> HOLY BIT-CODE</li>
+                    </ul>
+                    <p class="monster-lore">
+                      A spectral executioner forged from abandoned game over screens. Reaps player tokens without mercy.
+                    </p>
+                  </article>
+
+                  <!-- Monster 4 -->
+                  <article class="monster-card monster-boss">
+                    <div class="monster-badge-row">
+                      <span class="pixel-pill pill-danger">BOSS THREAT</span>
+                      <span class="monster-id">#099</span>
+                    </div>
+                    <div class="monster-visual" aria-hidden="true">🐲</div>
+                    <h4 class="monster-name">CORRUPTED ROM WYRM</h4>
+                    <ul class="monster-stats">
+                      <li><strong>HP:</strong> 9,999</li>
+                      <li><strong>ATK:</strong> 250</li>
+                      <li><strong>DEF:</strong> 180</li>
+                      <li><strong>WEAKNESS:</strong> CORE OVERCLOCK</li>
+                    </ul>
+                    <p class="monster-lore">
+                      The legendary guardian of the high-score registry. Breaths devastating glitch-flames that distort screen geometry.
+                    </p>
+                  </article>
+
+                </div>
+              </div>
+            </section>
+
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         ARCADE FOOTER: GAME OVER / CONTINUE & HIGH SCORE SCREEN
+         ======================================================================= -->
+    <footer class="arcade-footer" id="game-over-screen" role="contentinfo" aria-label="Arcade High Score and Game Over Panel">
+      <div class="arcade-container footer-container">
+
+        <!-- Game Over Title -->
+        <div class="game-over-box">
+          <h2 class="game-over-text">GAME OVER?</h2>
+          <p class="continue-countdown">CONTINUE? <span id="countdown-timer" class="blink-fast">9</span></p>
+        </div>
+
+        <!-- High Score Hall of Fame Counter -->
+        <div class="high-score-board">
+          <div class="score-card">
+            <span class="score-label">1ST HIGH SCORE</span>
+            <span class="score-value" id="high-score-val">098400 PTS</span>
+            <span class="score-holder">TAG: [ACE]</span>
+          </div>
+          <div class="score-card player-score-card">
+            <span class="score-label">CURRENT RUN</span>
+            <span class="score-value" id="current-score-val">012500 PTS</span>
+            <span class="score-holder">TAG: [YOU]</span>
+          </div>
+        </div>
+
+        <!-- Insert Coin & Replay CTA -->
+        <div class="footer-bottom-row">
+          <button type="button" id="btn-insert-coin" class="arcade-btn btn-insert-coin">
+            <span class="coin-icon" aria-hidden="true">🪙</span>
+            <span>INSERT COIN (RESTART RUN)</span>
+          </button>
+          <p class="footer-credits">
+            CHIP-QUEST '84 &bull; ENGINEERED WITH PURE HTML, CSS &amp; ES6 &bull; ZERO EXTERNAL DEPENDENCIES
+          </p>
+        </div>
+
+      </div>
+    </footer>
+
+  </main>
+
+  <!-- =========================================================================
+       SCRIPTS: Component first, then main application orchestrator
+       ========================================================================= -->
+  <script src="js/component.js"></script>
+  <script src="js/main.js"></script>
+
+</body>
+</html>
